@@ -2,11 +2,36 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const { validateInputPart } = require("./handlers/validateInput");
+const jwt = require("jsonwebtoken");
 
 const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+async function createJwtToken(user, secretKey, exp_period) {
+  let signedErr;
+  let signedToken;
+
+  await jwt.sign(
+    { user: user },
+    secretKey,
+    { expiresIn: exp_period },
+    (err, token) => {
+      if (err) {
+        console.log(err);
+        signedErr = err;
+      }
+      console.log({ token });
+      signedToken = token;
+    }
+  );
+
+  if (signedErr) {
+    return signedErr; // will be an Error object (thus typeof signedErr === "object")
+  }
+  return signedToken; // will be a string (thus typeof signedToken === "string")
+}
 
 let parts = [
   { id: 1, name: "joint1", clientID: "a1" },
@@ -31,6 +56,25 @@ app.get("/api/parts/:id", (req, res) => {
     return res.status(404).json({ message: "Error: content not found!" });
   }
   res.send(foundPart);
+});
+
+app.post("/api/login", async (req, res) => {
+  //mock user validation completion
+  const user = {
+    id: 1000,
+    username: "Yifan",
+    email: "a@qq.com"
+  };
+  const secretKey = "my_secret_key";
+  //const secretKey = false;
+  const expiration_period = "1d";
+
+  let jwtResult = await createJwtToken(user, secretKey, expiration_period);
+  //console.log(typeof jwtResult);
+  if (typeof jwtResult !== "string")
+    //meaning jwtResult is returned as an Error object!
+    return res.json({ Error: "failed to send back signed jwt token" });
+  res.json({ token: jwtResult });
 });
 
 app.post("/api/parts", (req, res) => {
