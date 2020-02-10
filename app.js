@@ -1,3 +1,6 @@
+require("dotenv").config(); // load all the env variables to the process.env by using dotenv package
+const secretKey = process.env.SECRET_KEY;
+
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
@@ -45,8 +48,6 @@ app.post("/api/login", async (req, res) => {
     username: "Yifan",
     email: "a@qq.com"
   };
-  const secretKey = "my_secret_key";
-  //const secretKey = false;
   const expiration_period = "1d";
 
   //- Create jwt token for user
@@ -63,7 +64,6 @@ app.post("/api/login", async (req, res) => {
 
 app.post("/api/parts", extractJwtToken, async (req, res) => {
   //- Verify user through jwt token first and return if failed
-  const secretKey = "my_secret_key";
   let jwtResult = await verifyJwtToken(req.token, secretKey);
   //console.log(jwtResult.message); //check the format of the jwt verification data
   if (typeof jwtResult.message !== "undefined") {
